@@ -70,10 +70,17 @@ function LabContent() {
 
               <div className="flex items-start justify-between gap-2 mt-2.5 px-0.5">
                 <Link href={artifact.href} className="flex-1 min-w-0">
-                  <p className="text-[13px] font-medium text-white/90 truncate group-hover:text-purple-300 transition-colors">
-                    {artifact.name}
-                  </p>
-                  <p className="text-[12px] text-white/35 mt-0.5 leading-snug line-clamp-2">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <p className="text-[13px] font-medium text-white/90 truncate group-hover:text-purple-300 transition-colors">
+                      {artifact.name}
+                    </p>
+                    {artifact.category && (
+                      <span className="shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300">
+                        {artifact.category}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[12px] text-white/35 leading-snug line-clamp-2">
                     {artifact.description}
                   </p>
                 </Link>
