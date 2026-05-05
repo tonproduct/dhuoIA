@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Search, HelpCircle, Info } from "lucide-react"
+import { Search, HelpCircle, Info, MoreVertical, Copy, Link2 } from "lucide-react"
 
 const shortcuts = [
   { key: "Scroll do Mouse",  action: "Aumentar/diminuir Zoom"               },
@@ -76,6 +76,28 @@ export function CanvasToolbar({ onAddTrigger, triggerPanelOpen }: Props) {
 
       {/* Right: actions */}
       <div className="flex items-center gap-1 relative">
+        <button
+          className="flex items-center gap-1.5 px-3 h-8 rounded text-sm hover:bg-gray-100 transition-colors"
+          style={{ color: "#6b7280", fontFamily: "Noto Sans, sans-serif" }}
+        >
+          <Copy size={14} />
+          Duplicar
+        </button>
+
+        <button
+          className="flex items-center gap-1.5 px-3 h-8 rounded text-sm font-semibold hover:bg-purple-50 transition-colors"
+          style={{ color: "#8e3ccb", fontFamily: "Noto Sans, sans-serif" }}
+        >
+          <Link2 size={14} />
+          Dependências
+        </button>
+
+        <button
+          className="flex items-center justify-center w-8 h-8 rounded hover:bg-gray-100 transition-colors"
+        >
+          <MoreVertical size={16} style={{ color: "#6b7280" }} />
+        </button>
+
         <button
           onClick={() => setShowShortcuts(!showShortcuts)}
           className="flex items-center justify-center w-8 h-8 rounded hover:bg-gray-100 transition-colors"
