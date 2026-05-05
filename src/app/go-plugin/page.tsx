@@ -107,6 +107,111 @@ return nil, errors.New("mensagem descritiva do erro")`}</CodeBlock>
 
         <Divider />
 
+        {/* FAQ */}
+        <section id="faq">
+          <H2>Perguntas & Respostas</H2>
+          <P>Questões técnicas levantadas durante o estudo do componente — respondidas pelo template e confirmadas pelo time.</P>
+
+          <div className="flex flex-col gap-0 mt-6 border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100">
+            {[
+              {
+                q: "Como eu acesso o payload que chega no componente?",
+                a: "Via o parâmetro in map[string]interface{} da função Exec. É o JSON do componente anterior já desmarshallado. O template menciona também inJSON para acesso ao payload parseado — forma exata a confirmar.",
+                status: "partial",
+              },
+              {
+                q: "Qual é a assinatura da função principal que o DHuO espera?",
+                a: `func (e *NomeDoPlugin) Exec(msgID string, ID string, name string, confs map[string]string, in map[string]interface{}) (map[string]interface{}, error)`,
+                code: true,
+                status: "confirmed",
+              },
+              {
+                q: "Como eu retorno dados para o próximo componente do fluxo?",
+                a: "Retornando um map[string]interface{} como primeiro valor da função Exec. O que estiver nesse mapa é o que chega no parâmetro in do próximo componente.",
+                status: "confirmed",
+              },
+              {
+                q: "Como retornar um erro para interromper o fluxo?",
+                a: 'return nil, errors.New("mensagem") — não há tipo especial de erro do DHuO. fmt.Errorf() também funciona.',
+                code: true,
+                status: "confirmed",
+              },
+              {
+                q: "Como acessar variáveis de ambiente ou segredos do workspace?",
+                a: "O parâmetro confs map[string]string traz configurações do componente. Se variáveis de ambiente do workspace chegam via confs ou via os.Getenv() precisa de confirmação. godotenv está disponível no go.mod.",
+                status: "partial",
+              },
+              {
+                q: "O componente é stateless entre execuções?",
+                a: "Não. Campos da struct persistem enquanto o plugin estiver carregado. É seguro e recomendado guardar connection pools (ex: *sql.DB) como campos da struct — inicializados uma vez, reutilizados entre execuções.",
+                status: "confirmed",
+              },
+              {
+                q: "Existe uma função de inicialização separada da execução?",
+                a: "O Go nativo tem init() que roda uma vez no startup — funciona para abrir conexões. O DHuO injeta os loggers via SetLogger() na inicialização do plugin. Não há evidência de hook proprietário adicional.",
+                status: "confirmed",
+              },
+              {
+                q: "Posso usar variáveis globais para connection pools?",
+                a: "Sim, mas a forma recomendada é usar campos da struct (receptor do método Exec). Eles cumprem o mesmo papel com escopo mais seguro.",
+                status: "confirmed",
+              },
+              {
+                q: "O botão Validar Código faz só análise estática ou compila de verdade?",
+                a: "Compila de verdade. O painel Output abre com o resultado da compilação real no backend do DHuO. Toast de sucesso confirma que o código passou pela compilação sem erros.",
+                status: "confirmed",
+              },
+              {
+                q: "Se eu precisar de uma biblioteca que não está no go.mod padrão, o que faço?",
+                a: "Processo de solicitação de inclusão e SLA precisam ser confirmados com o time DHuO. Dependências externas não homologadas causam falha em build.",
+                status: "gap",
+              },
+              {
+                q: "Posso criar múltiplos arquivos .go no mesmo plugin?",
+                a: "A interface mostra um único editor. O DHuO menciona exportação em .zip via Trigger HTTP, o que sugere que múltiplos arquivos podem ser suportados fora do editor inline. Precisa de confirmação.",
+                status: "gap",
+              },
+              {
+                q: "Os arquivos vinculados em qual path ficam disponíveis em runtime?",
+                a: "Não confirmado. Em plataformas similares o padrão é /app/files/<nome> ou relativo ao working directory. Precisa de confirmação antes de usar os.Open().",
+                status: "gap",
+              },
+              {
+                q: "Os logs aparecem em qual tela do DHuO?",
+                a: "Provavelmente no monitor de execução do canvas ou painel de observabilidade. O fato de subWF e msgID estarem na assinatura indica filtro por esses campos em alguma tela. Localização exata a confirmar.",
+                status: "gap",
+              },
+              {
+                q: "O timeout de execução é configurável?",
+                a: "Não há campo de timeout visível na aba Dados do Componente. Pode ser configurado no nível do pipeline ou fixo por tier de conta. Precisa de confirmação.",
+                status: "gap",
+              },
+            ].map(({ q, a, code, status }, i) => (
+              <div key={i} className="px-5 py-5">
+                <div className="flex items-start justify-between gap-4">
+                  <p className="text-[13px] font-semibold text-gray-900 leading-snug flex-1">{q}</p>
+                  <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${
+                    status === "confirmed" ? "bg-green-50 text-green-600 border border-green-200" :
+                    status === "partial"   ? "bg-yellow-50 text-yellow-600 border border-yellow-200" :
+                                            "bg-red-50 text-red-400 border border-red-200"
+                  }`}>
+                    {status === "confirmed" ? "confirmado" : status === "partial" ? "parcial" : "pendente"}
+                  </span>
+                </div>
+                {code ? (
+                  <pre className="mt-3 rounded-lg bg-gray-900 text-gray-100 px-4 py-3 text-[12px] leading-relaxed overflow-x-auto">
+                    <code>{a}</code>
+                  </pre>
+                ) : (
+                  <p className="mt-2 text-[13px] text-gray-500 leading-relaxed">{a}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <Divider />
+
         {/* Gaps pendentes */}
         <section id="gaps">
           <H2>Pontos Pendentes de Confirmação</H2>
