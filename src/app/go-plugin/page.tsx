@@ -1,244 +1,542 @@
 import Image from "next/image"
 
-type Section = {
-  id: string
-  tab: string
-  title: string
-  description: string
-  bullets: string[]
-  image: string
-  imageAlt: string
-  note?: string
-}
-
-const sections: Section[] = [
-  {
-    id: "dados",
-    tab: "Dados do Componente",
-    title: "1. Dados do Componente",
-    description:
-      "Primeira aba. Define os metadados obrigatórios antes de qualquer código. Esses campos identificam o plugin dentro do runtime da plataforma.",
-    bullets: [
-      "ID do Componente — identificador único. Botão de copy ao lado para facilitar referências em outros pipelines.",
-      "Nome — nome legível exibido no canvas de integração.",
-      'Nome do Plugin — nome técnico Go. Regra: a-z, A-Z, 0-9, _ sem espaço, iniciando com letra. Vira o identificador real no runtime.',
-      "Tipo do Plugin — dropdown que define o ponto de extensão do componente (transformer, connector, etc.).",
-    ],
-    image: "/go-plugin/01-dados.png",
-    imageAlt: "Aba Dados do Componente",
-  },
-  {
-    id: "codigo-vazio",
-    tab: "Código Go — estado inicial",
-    title: "2. Código Go — estado inicial",
-    description:
-      'O editor aparece vazio. O botão "Gerar Template" popula o editor com o scaffold padrão do DHuO, incluindo toda a infraestrutura de logging da plataforma.',
-    bullets: [
-      '"Gerar Template" — gera o boilerplate com package main, LogFunc, safeLog e SetLogger já configurados.',
-      '"Validar Código" — desabilitado enquanto o editor estiver vazio.',
-    ],
-    image: "/go-plugin/02-codigo-vazio.png",
-    imageAlt: "Editor de código Go vazio",
-  },
-  {
-    id: "codigo-preenchido",
-    tab: "Código Go — com conteúdo",
-    title: "3. Código Go — com conteúdo",
-    description:
-      "Com o template gerado (ou código próprio inserido), o editor exibe o código com syntax highlight. O botão Validar Código fica ativo.",
-    bullets: [
-      "LogFunc — tipo que representa uma função de log com assinatura (subWF, msgID string, s string). Mantém rastreabilidade por subworkflow e messageID.",
-      "safeLog() — wrapper que previne panic se o logger for nil. Defensivo por padrão.",
-      "SetLogger() — a plataforma injeta logDev, logTrace, logDebug, logInfo, logWarn, logError em runtime. O componente não loga diretamente — ele recebe o logger como dependência (injeção de dependência).",
-    ],
-    image: "/go-plugin/03-codigo-preenchido.png",
-    imageAlt: "Editor com código Go preenchido",
-    note:
-      "Arquitetura de logging: o DHuO injeta as funções de log via SetLogger. Isso garante que todos os logs carregam subWF e messageID — rastreabilidade end-to-end sem esforço do desenvolvedor.",
-  },
-  {
-    id: "validado",
-    tab: "Código Go — após validação",
-    title: "4. Validação do Código",
-    description:
-      'Ao clicar em "Validar Código", a plataforma compila o código e exibe o resultado. Com sucesso, o fluxo de adição ao pipeline é liberado.',
-    bullets: [
-      "Painel Output abre ao lado do editor com o resultado da compilação.",
-      'Toast "Código validado com sucesso" confirma que o código compila sem erros.',
-      'Botões Cancelar e Adicionar aparecem no rodapé — o "Adicionar" só fica disponível após validação bem-sucedida.',
-    ],
-    image: "/go-plugin/04-validado.png",
-    imageAlt: "Tela após validação com sucesso",
-  },
-  {
-    id: "gomod-vazio",
-    tab: "go.mod — estado inicial",
-    title: "5. go.mod — gerenciamento de dependências",
-    description:
-      'Editor para o arquivo go.mod do plugin. O botão "Ver go.mod Padrão" exibe as dependências já disponíveis no runtime da plataforma — sem precisar declarar nada extra.',
-    bullets: [
-      '"Ver go.mod Padrão" — abre painel lateral com o go.mod base da plataforma.',
-      "Se o plugin precisar de uma lib já presente no padrão, não precisa declarar — ela já está disponível.",
-      "Só é necessário preencher o go.mod se o plugin usar dependências externas ao padrão.",
-    ],
-    image: "/go-plugin/05-gomod-vazio.png",
-    imageAlt: "Aba go.mod vazia",
-  },
-  {
-    id: "gomod-padrao",
-    tab: "go.mod — padrão da plataforma",
-    title: "6. go.mod Padrão — ecossistema disponível",
-    description:
-      "O go.mod padrão revela tudo que está disponível no runtime sem declaração adicional. Biblioteca impressionante — cobre praticamente todos os conectores do DHuO.",
-    bullets: [
-      "GCP: Bigtable v1.37, Pub/Sub v1.47, Storage v1.50",
-      "Azure: SDK azidentity v1.7, ADLS2 v1.0",
-      "AWS: aws-sdk-go v1.55",
-      "Mensageria: Kafka (IBM/sarama v1.45), MQTT (paho v1.5)",
-      "Banco de dados: PostgreSQL, SQL Server (go-mssqldb), SQLite, Redis v7",
-      "SAP: go-hdb v1.13",
-      "IA: anthropic-sdk-go v1.13 — Claude disponível nativamente",
-      "Utilitários: sprig/v3 (templates), gval (expressions), orderedmap, mxj (XML/JSON)",
-      'Módulo base: gitlab.engdb.com.br/dhuo-plat/integra/integraone/gone/pipeline — confirma runtime "gone" (Go + DHuO)',
-    ],
-    image: "/go-plugin/06-gomod-padrao.png",
-    imageAlt: "go.mod padrão da plataforma exibido",
-    note:
-      "O anthropic-sdk-go já está disponível. É possível chamar o Claude diretamente de um Go Plugin sem configuração adicional de dependência.",
-  },
-  {
-    id: "arquivos",
-    tab: "Arquivos",
-    title: "7. Arquivos — injeção de configuração",
-    description:
-      "Permite anexar arquivos de configuração ao componente sem hardcodar no código. Os arquivos precisam ser pré-cadastrados nas configurações da Organização.",
-    bullets: [
-      "Útil para injetar certificados TLS, chaves de API, arquivos de configuração externos.",
-      "Os arquivos aparecem como tags selecionáveis no campo.",
-      "Pré-requisito: o arquivo deve existir em Configurações → Arquivos da Organização antes de aparecer aqui.",
-    ],
-    image: "/go-plugin/07-arquivos.png",
-    imageAlt: "Aba Arquivos com seleção de arquivo",
-  },
-]
-
-const CATEGORY_COLORS: Record<string, string> = {
-  "GCP": "bg-blue-50 text-blue-700",
-  "Azure": "bg-sky-50 text-sky-700",
-  "AWS": "bg-orange-50 text-orange-700",
-  "Mensageria": "bg-yellow-50 text-yellow-700",
-  "BD": "bg-green-50 text-green-700",
-  "IA": "bg-purple-50 text-purple-700",
-}
-
 export default function GoPluginPage() {
   return (
     <div className="min-h-screen bg-white" style={{ fontFamily: "Noto Sans, sans-serif" }}>
+
       {/* Hero */}
       <div style={{ backgroundColor: "#7c22c0" }} className="px-10 py-12">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-[11px] font-semibold text-white/50 uppercase tracking-widest">
-              Componente Técnico
-            </span>
-          </div>
-          <h1 className="text-3xl font-bold text-white mb-3">Go Plugin</h1>
+          <span className="text-[11px] font-semibold text-white/50 uppercase tracking-widest">
+            Componente Técnico
+          </span>
+          <h1 className="text-3xl font-bold text-white mt-2 mb-3">Go Plugin</h1>
           <p className="text-[15px] text-white/70 max-w-2xl leading-relaxed">
-            Permite escrever lógica customizada em Go nativo e plugá-la diretamente em um pipeline de integração DHuO.
-            É o escape hatch da plataforma — quando nenhum componente pronto resolve, você escreve o seu.
+            Permite escrever e executar lógica customizada em linguagem Go diretamente dentro de um fluxo de integração.
+            Compilado em tempo de implantação, oferece performance nativa, acesso a um conjunto rico de bibliotecas e integração total ao sistema de observabilidade do DHuO.
           </p>
         </div>
       </div>
 
-      {/* Flow */}
-      <div className="border-b border-gray-100 bg-gray-50 px-10 py-5">
-        <div className="max-w-4xl mx-auto">
-          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Fluxo de uso</p>
-          <div className="flex items-center gap-2 flex-wrap">
-            {["Dados", "Código Go", "Validar", "go.mod", "Arquivos", "Adicionar ao canvas"].map((step, i, arr) => (
-              <div key={step} className="flex items-center gap-2">
-                <span className="text-[12px] font-semibold text-gray-700 bg-white border border-gray-200 px-3 py-1.5 rounded-full">
-                  {step}
+      <div className="max-w-4xl mx-auto px-10 py-12 flex flex-col gap-14">
+
+        {/* Visão Geral */}
+        <section id="visao-geral">
+          <H2>Visão Geral</H2>
+          <P>
+            O Go Plugin é o <em>escape hatch</em> da plataforma — quando nenhum componente pronto resolve, você escreve o seu.
+            Casos de uso típicos:
+          </P>
+          <Ul items={[
+            "Transformações de payload complexas que não são cobertas por componentes padrão",
+            "Integrações com SDKs de terceiros (AWS, Azure, Google Cloud, Anthropic, OpenAI, etc.)",
+            "Regras de negócio customizadas com alta performance",
+            "Leitura/escrita em bancos de dados (PostgreSQL, MySQL, MongoDB, Redis, SQLite, MS SQL)",
+            "Processamento de mensagens via MQTT, Kafka (sarama) ou AMQP",
+            "Uso de templates de configuração via variáveis de ambiente (godotenv)",
+          ]} />
+        </section>
+
+        <Divider />
+
+        {/* Como adicionar */}
+        <section id="adicionar">
+          <H2>Como Adicionar o Go Plugin ao Canvas</H2>
+          <P>
+            No painel lateral direito do Canvas, na seção <Strong>Técnicos</Strong>, arraste o item <Strong>Go Plugin</Strong> para a área de trabalho.
+            Isso abrirá automaticamente o drawer de configuração.
+          </P>
+        </section>
+
+        <Divider />
+
+        {/* Drawer */}
+        <section id="drawer">
+          <H2>Drawer de Configuração</H2>
+          <P>O drawer é dividido em 4 abas acessíveis pelo menu lateral direito dentro do próprio painel:</P>
+          <div className="flex flex-wrap gap-2 mt-3">
+            {["Dados do Componente", "Código Go", "go.mod", "Arquivos"].map((tab, i) => (
+              <span key={tab} className="flex items-center gap-2">
+                <span className="text-[12px] font-semibold px-3 py-1.5 rounded-full border" style={{ color: "#7c22c0", borderColor: "#e9d5ff", backgroundColor: "#faf5ff" }}>
+                  {tab}
                 </span>
-                {i < arr.length - 1 && (
-                  <span className="text-gray-300 text-sm">→</span>
-                )}
-              </div>
+                {i < 3 && <span className="text-gray-300 text-sm">·</span>}
+              </span>
             ))}
           </div>
-        </div>
-      </div>
+        </section>
 
-      {/* Sections */}
-      <div className="max-w-4xl mx-auto px-10 py-12">
-        <div className="flex flex-col gap-16">
-          {sections.map((section) => (
-            <div key={section.id} id={section.id} className="flex flex-col gap-5">
-              {/* Tab badge */}
-              <div>
-                <span
-                  className="text-[11px] font-semibold px-2.5 py-1 rounded-full border"
-                  style={{ color: "#7c22c0", borderColor: "#e9d5ff", backgroundColor: "#faf5ff" }}
-                >
-                  {section.tab}
-                </span>
+        <Divider />
+
+        {/* Aba 1 */}
+        <section id="dados">
+          <TabBadge>Aba 1</TabBadge>
+          <H2 className="mt-2">Dados do Componente</H2>
+          <P>Metainformações que identificam e categorizam o componente dentro do fluxo.</P>
+
+          <Screenshot src="/go-plugin/01-dados.png" alt="Aba Dados do Componente" />
+
+          <div className="flex flex-col gap-6 mt-6">
+            <Field
+              name="ID do Componente"
+              required
+              description="Identificador único gerado automaticamente pelo DHuO. Pode ser copiado via o ícone ao lado. Utilizado internamente para referenciar o componente em conexões e logs."
+            />
+            <Field
+              name="Nome"
+              description="Nome descritivo para identificação visual no canvas. Sem restrição de caracteres — serve apenas como label de exibição."
+            />
+            <Field
+              name="Nome do Plugin"
+              required
+              description="Nome técnico do plugin Go compilado. Identificador usado pelo runtime do DHuO ao registrar o plugin."
+            >
+              <div className="mt-2 rounded-md bg-gray-50 border border-gray-200 px-4 py-3 text-[12px] text-gray-600">
+                Regras: deve iniciar com letra · caracteres permitidos: <code className="bg-white border border-gray-200 px-1 rounded">a-z, A-Z, 0-9, _</code> · sem espaços<br />
+                Exemplos válidos: <code className="bg-white border border-gray-200 px-1 rounded">processador_pedidos</code>, <code className="bg-white border border-gray-200 px-1 rounded">TransformaPayload</code>, <code className="bg-white border border-gray-200 px-1 rounded">validador_cpf_v2</code>
               </div>
+            </Field>
+            <Field
+              name="Tipo do Plugin"
+              required
+              description="Define o papel do componente dentro do fluxo de execução."
+            >
+              <Table
+                headers={["Valor", "Descrição"]}
+                rows={[
+                  ["Componente de Execução", "O plugin executa lógica de negócio quando acionado dentro do fluxo. Tipo padrão para processamento de dados, transformações e chamadas a serviços externos."],
+                ]}
+              />
+              <Note>Para exportar o código gerado em formato .zip, o componente do tipo Componente de Execução deve estar conectado a um Trigger HTTP.</Note>
+            </Field>
+          </div>
+        </section>
 
-              <h2 className="text-[20px] font-bold text-gray-900 -mt-1">{section.title}</h2>
-              <p className="text-[14px] text-gray-500 leading-relaxed">{section.description}</p>
+        <Divider />
 
-              {/* Screenshot */}
-              <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-gray-50">
-                <Image
-                  src={section.image}
-                  alt={section.imageAlt}
-                  width={1200}
-                  height={700}
-                  className="w-full h-auto"
-                  style={{ display: "block" }}
-                />
-              </div>
+        {/* Aba 2 */}
+        <section id="codigo">
+          <TabBadge>Aba 2</TabBadge>
+          <H2 className="mt-2">Código Go</H2>
+          <P>
+            Editor de código principal com dois painéis: o editor Monaco à esquerda e o painel Output à direita (exibido após validação).
+          </P>
 
-              {/* Bullets */}
-              <ul className="flex flex-col gap-2.5">
-                {section.bullets.map((bullet, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <span
-                      className="shrink-0 mt-1 w-1.5 h-1.5 rounded-full"
-                      style={{ backgroundColor: "#7c22c0" }}
-                    />
-                    <span className="text-[13px] text-gray-600 leading-relaxed">{bullet}</span>
+          <Screenshot src="/go-plugin/02-codigo-vazio.png" alt="Editor de código Go vazio" caption="Estado inicial — editor vazio, Validar Código desabilitado" />
+          <Screenshot src="/go-plugin/03-codigo-preenchido.png" alt="Editor com código Go preenchido" caption="Após Gerar Template — Validar Código ativo" />
+          <Screenshot src="/go-plugin/04-validado.png" alt="Após validação com sucesso" caption="Após validação — Output exibido, botões Cancelar e Adicionar disponíveis" />
+
+          <div className="flex flex-col gap-6 mt-6">
+            <Field name="Gerar Template" description="Preenche o editor com o boilerplate padrão do DHuO, incluindo toda a estrutura de logging. Recomendado como ponto de partida para qualquer novo plugin." />
+            <Field name="Validar Código" description="Compila o código contra o ambiente Go do DHuO e exibe erros ou sucesso no painel Output. Deve ser executado antes de salvar." />
+          </div>
+
+          <H3 className="mt-8">Estrutura do Template Padrão</H3>
+
+          <H4>1. Declaração de pacote e imports mínimos</H4>
+          <CodeBlock>{`package main
+
+import (
+    "fmt"
+)`}</CodeBlock>
+
+          <H4 className="mt-6">2. Bloco de Log Functions (DHuO Standard)</H4>
+          <P>Adicionado entre os comentários <code className="bg-gray-100 px-1.5 py-0.5 rounded text-[12px]">// ===BEGIN DHuO Log functions===</code>. Pode ser removido se não precisar de logging.</P>
+
+          <div className="flex flex-col gap-4 mt-4">
+            <Field name="LogFunc" description="Tipo que representa uma função de log no padrão DHuO. Recebe subWF (identificador do sub-workflow), msgID (identificador único da execução) e s (mensagem de log)." />
+            <Field name="safeLog" description="Função auxiliar que evita panic quando o logger for nil. Deve ser usada no lugar de chamadas diretas ao LogFunc." />
+            <Field name="SetLogger" description="Recebe os injetores de log do DHuO nos níveis: logDev, logTrace, logDebug, logInfo, logWarn, logError. O DHuO chama essa função automaticamente na inicialização do plugin." />
+          </div>
+
+          <Table
+            className="mt-6"
+            headers={["Nível", "Finalidade"]}
+            rows={[
+              ["logDev", "Mensagens de desenvolvimento (visíveis apenas em ambiente de dev)"],
+              ["logTrace", "Rastreamento detalhado de execução"],
+              ["logDebug", "Informações de depuração"],
+              ["logInfo", "Eventos informativos do fluxo normal"],
+              ["logWarn", "Alertas que não interrompem o fluxo"],
+              ["logError", "Erros que afetam o processamento"],
+            ]}
+          />
+
+          <Note className="mt-4">
+            Nunca chame <code className="bg-purple-50 px-1 rounded">LogFunc</code> diretamente. Sempre use <code className="bg-purple-50 px-1 rounded">safeLog(loggerFunc, subWF, msgID, &quot;mensagem&quot;)</code> para evitar panics quando o logger não for injetado.
+          </Note>
+        </section>
+
+        <Divider />
+
+        {/* Aba 3 */}
+        <section id="gomod">
+          <TabBadge>Aba 3</TabBadge>
+          <H2 className="mt-2">go.mod</H2>
+          <P>Gerencia as dependências Go do plugin. Editor editável à esquerda e go.mod Padrão da plataforma à direita.</P>
+
+          <Screenshot src="/go-plugin/05-gomod-vazio.png" alt="Aba go.mod vazia" caption="Estado inicial — editor vazio" />
+          <Screenshot src="/go-plugin/06-gomod-padrao.png" alt="go.mod padrão exibido" caption="Após clicar em Ver go.mod Padrão" />
+
+          <P className="mt-4">
+            <Strong>Ver go.mod Padrão</Strong> — exibe o go.mod base da plataforma com todas as dependências pré-aprovadas. Possui botão Copiar. Versão Go base: <code className="bg-gray-100 px-1.5 py-0.5 rounded text-[12px]">1.24.3</code>
+          </P>
+
+          <H3 className="mt-8">Dependências Disponíveis</H3>
+
+          {[
+            {
+              group: "Cloud & Infraestrutura",
+              items: [
+                "cloud.google.com/go/bigtable v1.37.0",
+                "cloud.google.com/go/pubsub v1.47.0",
+                "cloud.google.com/go/storage v1.50.0",
+                "github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.7.x",
+                "github.com/aws/aws-sdk-go v1.55.7",
+                "gitlab.engdb.com.br/dhuo-plat/gotools/g-onedrive v1.0.x (internal)",
+              ],
+            },
+            {
+              group: "Banco de Dados",
+              items: [
+                "github.com/lib/pq v1.10.9 — PostgreSQL",
+                "github.com/go-sql-driver/mysql v1.9.2 — MySQL",
+                "github.com/glebarez/go-sqlite v1.22.0 — SQLite",
+                "github.com/denisenkom/go-mssqldb v0.12.3 — MS SQL Server",
+                "github.com/SAP/go-hdb v1.13.6 — SAP HANA",
+                "github.com/go-redis/redis/v7 v7.4.1 — Redis",
+                "github.com/jmoiron/sqlx v1.4.0 — Query builder SQL",
+                "github.com/godror/godror v0.40.3 — Oracle DB",
+                "github.com/DATA-DOG/go-sqlmock v1.5.2 — Mock SQL para testes",
+                "github.com/gopcua/opcua v0.8.0 — OPC-UA (IoT/SCADA)",
+              ],
+            },
+            {
+              group: "Mensageria & Protocolos",
+              items: [
+                "github.com/IBM/sarama v1.45.1 — Apache Kafka",
+                "github.com/eclipse/paho.mqtt.golang v1.5.0 — MQTT",
+                "github.com/streadway/amqp v1.1.0 — AMQP/RabbitMQ",
+              ],
+            },
+            {
+              group: "AI & LLMs",
+              items: [
+                "github.com/anthropics/anthropic-sdk-go v1.13.0 — Anthropic Claude API",
+                "github.com/openai/openai-go/v2 v2.7.1 — OpenAI API",
+                "github.com/modelcontextprotocol/go-sdk v1.4.0 — MCP (Model Context Protocol)",
+              ],
+            },
+            {
+              group: "HTTP & Web",
+              items: [
+                "github.com/gofiber/fiber/v2 v2.52.8 — HTTP framework",
+                "github.com/valyala/fasthttp v1.51.0 — HTTP client/server de alta performance",
+              ],
+            },
+            {
+              group: "Utilitários & Parsing",
+              items: [
+                "github.com/Masterminds/sprig/v3 v3.3.0 — Funções de template",
+                "github.com/PaesslerAG/gval v1.2.4 — Avaliação de expressões",
+                "github.com/clbanning/mxj/v2 v2.7.0 — Manipulação de XML/JSON",
+                "github.com/xeipuuv/gojsonschema v1.2.0 — Validação de JSON Schema",
+                "github.com/wamuir/go-xslt v0.1.4 — Transformações XSLT",
+                "github.com/joho/godotenv v1.5.1 — Variáveis de ambiente via .env",
+                "github.com/google/uuid v1.6.0 — Geração de UUIDs",
+                "github.com/golang/protobuf v1.5.4 — Protocol Buffers",
+                "github.com/patrickmn/go-cache v2.1.0 — Cache em memória",
+                "github.com/robfig/cron/v3 v3.0.1 — Agendamento de tarefas",
+                "github.com/stretchr/testify v1.10.0 — Framework de testes",
+              ],
+            },
+          ].map(({ group, items }) => (
+            <div key={group} className="mt-5">
+              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-2">{group}</p>
+              <ul className="flex flex-col gap-1.5">
+                {items.map((item) => (
+                  <li key={item} className="flex items-start gap-2">
+                    <span className="shrink-0 mt-1.5 w-1 h-1 rounded-full bg-gray-300" />
+                    <code className="text-[12px] text-gray-700">{item}</code>
                   </li>
                 ))}
               </ul>
-
-              {/* Note */}
-              {section.note && (
-                <div
-                  className="rounded-lg px-4 py-3 text-[13px] leading-relaxed"
-                  style={{ backgroundColor: "#faf5ff", borderLeft: "3px solid #7c22c0", color: "#6b21a8" }}
-                >
-                  <span className="font-semibold">NEXUS:</span> {section.note}
-                </div>
-              )}
-
-              <div className="border-b border-gray-100" />
             </div>
           ))}
-        </div>
 
-        {/* Footer note */}
-        <div className="mt-12 rounded-xl bg-gray-50 border border-gray-200 px-6 py-5">
-          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-2">Arquitetura resumida</p>
-          <p className="text-[13px] text-gray-600 leading-relaxed">
-            O Go Plugin roda dentro do runtime <code className="bg-white border border-gray-200 px-1.5 py-0.5 rounded text-xs">gone</code> (módulo{" "}
-            <code className="bg-white border border-gray-200 px-1.5 py-0.5 rounded text-xs">integraone/gone/pipeline</code>).
-            A plataforma injeta loggers, variáveis e arquivos em runtime — o código Go não depende de nada externo além do que o DHuO fornece.
-            O <code className="bg-white border border-gray-200 px-1.5 py-0.5 rounded text-xs">anthropic-sdk-go</code> já faz parte do go.mod padrão,
-            permitindo chamar o Claude diretamente de qualquer plugin sem configuração adicional.
-          </p>
-        </div>
+          <Note className="mt-6">
+            Somente as dependências listadas no go.mod Padrão estão disponíveis no ambiente de compilação do DHuO. Qualquer dependência externa não listada resultará em erro de compilação.
+          </Note>
+        </section>
+
+        <Divider />
+
+        {/* Aba 4 */}
+        <section id="arquivos">
+          <TabBadge>Aba 4</TabBadge>
+          <H2 className="mt-2">Arquivos</H2>
+          <P>
+            Permite associar arquivos externos ao plugin. Ficam disponíveis em tempo de execução para leitura pelo código.
+            Os arquivos devem ser cadastrados previamente em <Strong>Configurações → Arquivos da Organização</Strong>.
+          </P>
+
+          <Screenshot src="/go-plugin/07-arquivos.png" alt="Aba Arquivos" />
+
+          <Field
+            name="Arquivos"
+            description="Seletor múltiplo (multi-select com tags). Cada arquivo selecionado aparece como uma tag removível. Para remover, clique no × ao lado do nome."
+            className="mt-4"
+          />
+          <P className="mt-3">
+            Caso de uso: carregar arquivos de configuração (.json, .yaml, .pem, certificados TLS, templates, schemas) que o código Go acessa via sistema de arquivos em runtime.
+          </P>
+        </section>
+
+        <Divider />
+
+        {/* Ações */}
+        <section id="acoes">
+          <H2>Ações do Drawer</H2>
+          <Table
+            headers={["Botão", "Localização", "Comportamento"]}
+            rows={[
+              ["Cancelar", "Rodapé", "Descarta todas as alterações e fecha o drawer sem salvar"],
+              ["Adicionar", "Rodapé", "Valida os campos obrigatórios e adiciona/salva o componente no canvas"],
+              ["? (Ajuda)", "Cabeçalho", "Exibe o painel contextual com instruções de uso do componente"],
+              ["✕ (Fechar)", "Cabeçalho", "Fecha o drawer (equivalente a Cancelar)"],
+            ]}
+          />
+        </section>
+
+        <Divider />
+
+        {/* Fluxo completo */}
+        <section id="fluxo">
+          <H2>Fluxo Completo: Criando um Go Plugin do Zero</H2>
+          <div className="flex flex-col gap-6 mt-4">
+            {[
+              {
+                step: "1",
+                title: "Adicionar ao Canvas",
+                body: "No painel lateral de componentes, na categoria Técnicos, clique ou arraste o Go Plugin para o canvas.",
+              },
+              {
+                step: "2",
+                title: "Preencher os Dados do Componente",
+                body: "Preencha obrigatoriamente: ID do Componente, Nome do Plugin (a-z, A-Z, 0-9, _ começando com letra) e Tipo do Plugin (Componente de Execução). Nome é opcional.",
+              },
+              {
+                step: "3",
+                title: "Escrever o Código Go",
+                body: 'Acesse a aba Código Go. Clique em "Gerar Template" para obter o boilerplate com as funções de log já configuradas. Implemente sua lógica utilizando os loggers injetados via SetLogger.',
+              },
+              {
+                step: "4",
+                title: "Validar o Código",
+                body: 'Clique em "Validar Código". Verifique o painel Output à direita. Corrija eventuais erros de compilação antes de prosseguir.',
+              },
+              {
+                step: "5",
+                title: "Configurar Dependências (se necessário)",
+                body: 'Acesse a aba go.mod. Clique em "Ver go.mod Padrão" para consultar as bibliotecas disponíveis. Adicione no painel esquerdo apenas as dependências que o plugin efetivamente utiliza, respeitando nomes e versões exatos do padrão.',
+              },
+              {
+                step: "6",
+                title: "Vincular Arquivos (se necessário)",
+                body: "Acesse a aba Arquivos. Selecione os arquivos cadastrados na organização que seu código precisará acessar em runtime.",
+              },
+              {
+                step: "7",
+                title: "Salvar o Componente",
+                body: 'Clique em "Adicionar" no rodapé. O componente aparecerá no canvas pronto para ser conectado ao fluxo.',
+              },
+              {
+                step: "8",
+                title: "Conectar ao Fluxo",
+                body: "Conecte o Go Plugin ao Trigger HTTP (ou ao componente antecessor no fluxo). Para exportar o código em .zip, o componente deve estar conectado a um Trigger HTTP.",
+              },
+            ].map(({ step, title, body }) => (
+              <div key={step} className="flex gap-4">
+                <div
+                  className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold text-white mt-0.5"
+                  style={{ backgroundColor: "#7c22c0" }}
+                >
+                  {step}
+                </div>
+                <div>
+                  <p className="text-[14px] font-semibold text-gray-900">{title}</p>
+                  <p className="text-[13px] text-gray-500 mt-1 leading-relaxed">{body}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <Divider />
+
+        {/* Boas práticas */}
+        <section id="boas-praticas">
+          <H2>Boas Práticas</H2>
+          <Ul items={[
+            "Use sempre safeLog em vez de chamar LogFunc diretamente — o logger pode ser nil em determinados contextos de execução.",
+            "Mantenha o go.mod do plugin enxuto, declarando apenas as dependências que o código realmente importa — dependências não utilizadas aumentam o tempo de compilação sem benefício.",
+            "Antes de usar uma biblioteca de terceiros, confirme se ela está listada no go.mod Padrão — dependências externas não homologadas causarão falha em build.",
+            "Utilize os níveis de log de forma semântica: logDev e logTrace são filtrados em produção, então prefira logInfo para eventos operacionais relevantes.",
+            "Nomeie o plugin com um identificador que reflita sua função (validar_nfe, enriquecer_cliente, chamar_api_legado) — facilita a rastreabilidade nos logs do DHuO.",
+          ]} />
+        </section>
+
       </div>
+    </div>
+  )
+}
+
+// ─── Design components ────────────────────────────────────────────────────────
+
+function H2({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <h2 className={`text-[20px] font-bold text-gray-900 ${className}`}>
+      {children}
+    </h2>
+  )
+}
+
+function H3({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <h3 className={`text-[16px] font-bold text-gray-800 ${className}`}>
+      {children}
+    </h3>
+  )
+}
+
+function H4({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <h4 className={`text-[13px] font-semibold text-gray-700 ${className}`}>
+      {children}
+    </h4>
+  )
+}
+
+function P({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <p className={`text-[14px] text-gray-500 leading-relaxed mt-3 ${className}`}>
+      {children}
+    </p>
+  )
+}
+
+function Strong({ children }: { children: React.ReactNode }) {
+  return <strong className="font-semibold text-gray-700">{children}</strong>
+}
+
+function Ul({ items }: { items: string[] }) {
+  return (
+    <ul className="flex flex-col gap-2.5 mt-4">
+      {items.map((item, i) => (
+        <li key={i} className="flex items-start gap-3">
+          <span className="shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#7c22c0" }} />
+          <span className="text-[13px] text-gray-600 leading-relaxed">{item}</span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function Divider() {
+  return <div className="border-t border-gray-100" />
+}
+
+function TabBadge({ children }: { children: React.ReactNode }) {
+  return (
+    <span
+      className="text-[11px] font-semibold px-2.5 py-1 rounded-full border"
+      style={{ color: "#7c22c0", borderColor: "#e9d5ff", backgroundColor: "#faf5ff" }}
+    >
+      {children}
+    </span>
+  )
+}
+
+function Note({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div
+      className={`rounded-lg px-4 py-3 text-[13px] leading-relaxed mt-4 ${className}`}
+      style={{ backgroundColor: "#faf5ff", borderLeft: "3px solid #7c22c0", color: "#6b21a8" }}
+    >
+      {children}
+    </div>
+  )
+}
+
+function CodeBlock({ children }: { children: React.ReactNode }) {
+  return (
+    <pre className="mt-3 rounded-lg bg-gray-900 text-gray-100 px-5 py-4 text-[12px] leading-relaxed overflow-x-auto">
+      <code>{children}</code>
+    </pre>
+  )
+}
+
+function Screenshot({ src, alt, caption }: { src: string; alt: string; caption?: string }) {
+  return (
+    <div className="mt-5">
+      <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+        <Image src={src} alt={alt} width={1200} height={700} className="w-full h-auto block" />
+      </div>
+      {caption && (
+        <p className="text-[11px] text-gray-400 mt-1.5 text-center">{caption}</p>
+      )}
+    </div>
+  )
+}
+
+function Field({
+  name, required, description, children, className = "",
+}: {
+  name: string; required?: boolean; description: string; children?: React.ReactNode; className?: string
+}) {
+  return (
+    <div className={className}>
+      <div className="flex items-center gap-2">
+        <span className="text-[13px] font-semibold text-gray-800">{name}</span>
+        {required && (
+          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-red-50 text-red-500 border border-red-100">
+            Obrigatório
+          </span>
+        )}
+      </div>
+      <p className="text-[13px] text-gray-500 mt-1 leading-relaxed">{description}</p>
+      {children}
+    </div>
+  )
+}
+
+function Table({
+  headers, rows, className = "",
+}: {
+  headers: string[]; rows: string[][]; className?: string
+}) {
+  return (
+    <div className={`mt-3 rounded-lg border border-gray-200 overflow-hidden ${className}`}>
+      <table className="w-full text-[12px]">
+        <thead>
+          <tr className="bg-gray-50 border-b border-gray-200">
+            {headers.map((h) => (
+              <th key={h} className="text-left px-4 py-2.5 font-semibold text-gray-600">{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => (
+            <tr key={i} className="border-b border-gray-100 last:border-0">
+              {row.map((cell, j) => (
+                <td key={j} className={`px-4 py-2.5 ${j === 0 ? "font-mono text-gray-800" : "text-gray-500"}`}>
+                  {cell}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 }
