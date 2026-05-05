@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronDown, PlusCircle, Copy, Link2, MoreVertical } from "lucide-react"
+import { ChevronDown, PlusCircle } from "lucide-react"
 
 function VersionSelect({ label, value }: { label: string; value: string }) {
   return (
@@ -84,28 +84,6 @@ export function IntegrationHeader() {
           </span>
         </div>
 
-        <div className="flex items-center gap-1">
-          <button
-            className="flex items-center gap-1.5 px-3 h-8 rounded text-sm hover:bg-gray-50 transition-colors"
-            style={{ color: "#6b7280", fontFamily: "Noto Sans, sans-serif", border: "1px solid #e5e7eb" }}
-          >
-            <Copy size={14} />
-            Duplicar
-          </button>
-          <button
-            className="flex items-center gap-1.5 px-3 h-8 rounded text-sm font-semibold hover:opacity-90 transition-opacity"
-            style={{ color: "#8e3ccb", fontFamily: "Noto Sans, sans-serif", border: "1px solid #e5e7eb" }}
-          >
-            <Link2 size={14} />
-            Dependências
-          </button>
-          <button
-            className="flex items-center justify-center w-8 h-8 rounded hover:bg-gray-50 transition-colors"
-            style={{ border: "1px solid #e5e7eb" }}
-          >
-            <MoreVertical size={16} style={{ color: "#6b7280" }} />
-          </button>
-        </div>
       </div>
     </header>
   )
