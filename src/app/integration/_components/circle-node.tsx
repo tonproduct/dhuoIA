@@ -1,13 +1,12 @@
-import { Handle, Position, type NodeProps, useReactFlow, useNodes } from "@xyflow/react"
-import { Settings2, Trash2, ArrowLeftRight } from "lucide-react"
+import { Handle, Position, type NodeProps, useReactFlow } from "@xyflow/react"
+import { Settings2, Trash2, ArrowLeftRight, AlertTriangle } from "lucide-react"
 import { ALL_COMPONENTS } from "./types"
 import { useIntegrationContext } from "./integration-context"
-
-const TRIGGER_IDS = new Set(ALL_COMPONENTS.filter((c) => c.category === "trigger").map((c) => c.id))
 
 export type CircleNodeData = {
   compId: string
   label: string
+  configured?: boolean
 }
 
 const NODE_SIZE = 72
@@ -15,13 +14,10 @@ const NODE_SIZE = 72
 export function CircleNode({ id, data, selected }: NodeProps) {
   const { setNodes } = useReactFlow()
   const { openEdit } = useIntegrationContext()
-  const nodes = useNodes()
   const d = data as CircleNodeData
   const comp = ALL_COMPONENTS.find((c) => c.id === d.compId) ?? ALL_COMPONENTS[0]
   const isChoice = d.compId === "choice"
-  const isTrigger = TRIGGER_IDS.has(d.compId)
-  const triggerCount = nodes.filter((n) => TRIGGER_IDS.has((n.data as CircleNodeData).compId)).length
-  const showWarning = isTrigger && triggerCount >= 2
+  const showWarning = !d.configured
 
   function deleteNode() {
     setNodes((nds) => nds.filter((n) => n.id !== id))
@@ -32,22 +28,26 @@ export function CircleNode({ id, data, selected }: NodeProps) {
       {/* Warning badge */}
       {showWarning && (
         <div style={{ position: "relative" }} className="group">
-          <div style={{
-            width: 18, height: 18,
-            borderRadius: "50%",
-            backgroundColor: "#ef4444",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 1px 4px rgba(239,68,68,0.35)",
-            cursor: "default",
-          }}>
-            <span style={{ color: "white", fontSize: 11, fontWeight: 700, lineHeight: 1, fontFamily: "Noto Sans, sans-serif" }}>!</span>
-          </div>
+          <button
+            onClick={(e) => { e.stopPropagation(); openEdit(id, d.compId, d.label) }}
+            style={{
+              width: 18, height: 18,
+              borderRadius: "50%",
+              backgroundColor: "#f59e0b",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 1px 4px rgba(245,158,11,0.4)",
+              cursor: "pointer",
+              border: "none",
+            }}
+          >
+            <AlertTriangle size={11} color="white" strokeWidth={2.5} />
+          </button>
           <div style={{
             position: "absolute",
             bottom: "calc(100% + 6px)",
             left: "50%",
             transform: "translateX(-50%)",
-            backgroundColor: "#1f2937",
+            backgroundColor: "#6E6E6E",
             color: "white",
             fontSize: 11,
             fontFamily: "Noto Sans, sans-serif",
@@ -62,7 +62,7 @@ export function CircleNode({ id, data, selected }: NodeProps) {
           }}
             className="opacity-0 group-hover:opacity-100 transition-opacity duration-150"
           >
-            Apenas um Trigger é permitido.<br />Remova os demais para continuar.
+            Parâmetros não definidos. Clique para configurar.
           </div>
         </div>
       )}

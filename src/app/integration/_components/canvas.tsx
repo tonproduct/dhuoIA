@@ -71,7 +71,7 @@ function FlowInner({
         id: `${pendingNode.compId}-${Date.now()}`,
         type: "circleNode",
         position: center,
-        data: { compId: pendingNode.compId, label: pendingNode.label },
+        data: { compId: pendingNode.compId, label: pendingNode.label, configured: true },
       },
     ])
     onPendingConsumed()
@@ -82,7 +82,7 @@ function FlowInner({
     setNodes((nds) =>
       nds.map((n) =>
         n.id === pendingUpdate.nodeId
-          ? { ...n, data: { ...n.data, label: pendingUpdate.label } }
+          ? { ...n, data: { ...n.data, label: pendingUpdate.label, configured: true } }
           : n
       )
     )
@@ -109,7 +109,7 @@ function FlowInner({
           id: `${compId}-${Date.now()}`,
           type: "circleNode",
           position,
-          data: { compId, label: compId.toUpperCase() },
+          data: { compId, label: compId.toUpperCase(), configured: false },
         },
       ])
     }
